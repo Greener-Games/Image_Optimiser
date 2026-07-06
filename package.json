@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "npm run build:workspaces && npm run build:app",
     "preview": "vite preview",
     "lint:eslint": "eslint .",
     "lint:eslint:fix": "eslint . --fix",
@@ -21,9 +21,13 @@
     "deps:all": "npm run deps:audit && npm run deps:outdated",
     "deps:upgrade:minor": "npx npm-check-updates -u --target minor --peer && npm install",
     "deps:upgrade:latest": "npx npm-check-updates -u --peer && npm install",
-    "deps:upgrade:interactive": "npx npm-check-updates -i --peer"
+    "deps:upgrade:interactive": "npx npm-check-updates -i --peer",
+    "build:app": "vue-tsc --noEmit && vite build",
+    "build:workspaces": "npm run build --workspaces --if-present",
+    "publish:test": "npm run publish:test --workspaces --if-present"
   },
   "dependencies": {
+    "@greener-games/image-optimiser": "*",
     "pinia": "^3.0.4",
     "vue": "^3.5.34",
     "vue-router": "^5.0.7"
@@ -66,5 +70,8 @@
     "vite-plugin-vue-devtools": "^8.1.2",
     "vue-eslint-parser": "^10.4.0",
     "vue-tsc": "^3.3.0"
-  }
+  },
+  "workspaces": [
+    "plugins/**/*"
+  ]
 }
