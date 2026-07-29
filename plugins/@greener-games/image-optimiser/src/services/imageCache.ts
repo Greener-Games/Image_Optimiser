@@ -1,6 +1,5 @@
+import { useMediaOptimizerConfig } from './MediaOptimizerConfig';
 
-const CACHE_NAME = 'cd-image-cache-v1';
-const EXPIRATION_DAYS = 7;
 
 interface CacheMetadata {
   timestamp: number;
@@ -58,6 +57,11 @@ export class ImageCacheService {
   static async getImageUrl(url: string): Promise<string> {
     if (!url) return '';
 
+    const config = useMediaOptimizerConfig();
+    if (!config.enableCaching) {
+      return url;
+    }
+
     // 1. Check Registry (Synchronous check)
     if (this.blobGuiRegistry.has(url)) {
       return this.blobGuiRegistry.get(url)!;
@@ -89,7 +93,8 @@ export class ImageCacheService {
     const { base, width: requestedWidth, name } = this.getBaseAssetInfo(url);
 
     try {
-      const cache = await caches.open(CACHE_NAME);
+      const config = useMediaOptimizerConfig();
+      const cache = await caches.open(config.cacheName);
 
       // 1. Check for exact match first
       const exactMatch = await cache.match(url);
@@ -172,7 +177,8 @@ export class ImageCacheService {
       const { timestamp } = JSON.parse(metadata) as CacheMetadata;
       const now = Date.now();
       const diffDays = (now - timestamp) / (1000 * 60 * 60 * 24);
-      return diffDays > EXPIRATION_DAYS;
+      const config = useMediaOptimizerConfig();
+      return diffDays > config.expirationDays;
     } catch {
       return true;
     }

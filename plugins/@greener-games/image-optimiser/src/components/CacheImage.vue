@@ -5,7 +5,8 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { ImageCacheService } from '../services/imageCache';
-import { ImageOptimiser, type ImageSize } from '../services/imageOptimiser';
+import { ImageOptimiser } from '../services/imageOptimizer';
+import type { ImageSize } from '../services/MediaOptimizerConfig';
 
 const props = withDefaults(defineProps<{
   src?: string;
