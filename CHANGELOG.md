@@ -1,0 +1,12 @@
+# 1.0.0 (2026-07-29)
+
+
+### Bug Fixes
+
+* resolve linter warnings and unused variables for production build ([6bbcc83](https://github.com/Greener-Games/Image_Optimiser/commit/6bbcc83900aa0b65e0e6309011388aa17ef17ad0))
+* resolve stylelint errors and semantic-release pkgRoot configuration ([1f90fe9](https://github.com/Greener-Games/Image_Optimiser/commit/1f90fe9ab5c1c7e127c18e41f100164b6aeb93ca))
+
+
+### Features
+
+* modular configuration and extensible ICmsOptimizer architecture for v1.0.0 release ([9a878a6](https://github.com/Greener-Games/Image_Optimiser/commit/9a878a6d013b1892365a03220431f78207dd2343))
