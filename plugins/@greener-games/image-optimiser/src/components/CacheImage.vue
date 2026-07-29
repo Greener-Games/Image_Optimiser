@@ -13,6 +13,7 @@ const props = withDefaults(defineProps<{
   size?: ImageSize;
   alt?: string;
 }>(), {
+  src: '',
   size: 'm',
   alt: ''
 });

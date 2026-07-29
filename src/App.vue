@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen flex flex-col relative overflow-hidden">
     <!-- Ambient Background Blobs -->
-    <div class="absolute top-0 left-0 w-full h-[500px] bg-primary/10 dark:bg-primary/5 rounded-full blur-[120px] -translate-y-1/2 pointer-events-none"></div>
+    <div class="absolute top-0 start-0 w-full h-[500px] bg-primary/10 dark:bg-primary/5 rounded-full blur-[120px] -translate-y-1/2 pointer-events-none"></div>
 
     <header class="sticky top-0 z-50 w-full glass border-b border-white/20 dark:border-white/5">
       <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -27,7 +27,7 @@
 
         <div class="flex items-center gap-4">
           <!-- Dark Mode Toggle -->
-          <button @click="toggleDarkMode" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-text-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'">
+          <button class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-text-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'" @click="toggleDarkMode">
             <svg v-if="isDark" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="4" />
               <path d="M12 2v2" />
@@ -49,9 +49,9 @@
 
     <main class="flex-grow flex flex-col w-full relative z-10">
       <RouterView v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
+        <Transition name="fade" mode="out-in">
           <component :is="Component" />
-        </transition>
+        </Transition>
       </RouterView>
     </main>
 

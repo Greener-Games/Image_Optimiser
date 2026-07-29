@@ -1,3 +1,4 @@
+/* eslint-disable no-control-regex, no-undef */
 import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';

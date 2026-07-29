@@ -4,12 +4,10 @@ import { ImageCacheService } from './services/imageCache';
 import { ImageOptimiser } from './services/imageOptimizer';
 import { 
   setupMediaOptimizerConfig, 
-  useMediaOptimizerConfig,
   type MediaOptimizerConfigData,
   type ImageSize,
   type ICmsOptimizer
 } from './services/MediaOptimizerConfig';
-import { useImageOptimizer } from './composables/useImageOptimizer';
 
 export * from './services/imageCache';
 export * from './services/imageOptimizer';

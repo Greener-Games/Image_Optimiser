@@ -1,7 +1,6 @@
 import {
   useMediaOptimizerConfig,
-  type ImageSize,
-  type ICmsOptimizer
+  type ImageSize
 } from './MediaOptimizerConfig';
 
 export class ImageOptimiser {

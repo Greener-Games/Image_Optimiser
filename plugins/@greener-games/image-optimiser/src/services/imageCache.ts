@@ -29,7 +29,7 @@ export class ImageCacheService {
     try {
       let width = 0;
       let base = url;
-      let name = url.split('/').pop()?.split('?')[0] || 'unknown';
+      const name = url.split('/').pop()?.split('?')[0] || 'unknown';
 
       if (url.includes('cdn.hygraph.com')) {
         const urlObj = new URL(url);
@@ -97,9 +97,9 @@ export class ImageCacheService {
       const cache = await caches.open(config.cacheName);
 
       // 1. Check for exact match first
-      const exactMatch = await cache.match(url);
-      if (exactMatch && !(await this.isStale(url))) {
-        const blob = await exactMatch.blob();
+    const exactMatch = await cache.match(url);
+    if (exactMatch && !this.isStale(url)) {
+      const blob = await exactMatch.blob();
         console.log(`[Cache Service] Exact match found: ${name}`);
         return this.createBlobUrl(url, blob);
       }
@@ -112,7 +112,7 @@ export class ImageCacheService {
 
         if (base === cachedBase && cachedWidth >= requestedWidth && requestedWidth > 0) {
           const cachedResponse = await cache.match(request);
-          if (cachedResponse && !(await this.isStale(cachedUrl))) {
+          if (cachedResponse && !this.isStale(cachedUrl)) {
             const blob = await cachedResponse.blob();
             console.log(`[Cache Service] Smart match found: ${name} (Using ${cachedWidth}px for ${requestedWidth}px request)`);
             return this.createBlobUrl(url, blob);
@@ -132,7 +132,7 @@ export class ImageCacheService {
         const blobForSize = await response.clone().blob();
 
         await cache.put(url, responseClone);
-        await this.updateMetadata(url);
+        this.updateMetadata(url);
 
         console.log(`[Cache Service] Cached new asset: ${name} (${this.formatSize(blobForSize.size)})`);
 
@@ -169,7 +169,7 @@ export class ImageCacheService {
     })));
   }
 
-  private static async isStale(url: string): Promise<boolean> {
+  private static isStale(url: string): boolean {
     const metadata = localStorage.getItem(`cache_meta_${url}`);
     if (!metadata) return true;
 
@@ -184,7 +184,7 @@ export class ImageCacheService {
     }
   }
 
-  private static async updateMetadata(url: string) {
+  private static updateMetadata(url: string) {
     const metadata: CacheMetadata = {
       timestamp: Date.now(),
       url
