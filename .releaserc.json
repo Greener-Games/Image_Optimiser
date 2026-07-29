@@ -21,7 +21,7 @@
       "@semantic-release/npm",
       {
         "pkgRoot": "plugins/@greener-games/image-optimiser",
-        "npmPublish": true
+        "npmPublish": false
       }
     ],
     [
