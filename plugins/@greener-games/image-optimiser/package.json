@@ -1,8 +1,11 @@
 {
   "name": "@greener-games/image-optimiser",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Vue 3 plugin for caching and optimizing images",
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "main": "./dist/index.umd.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
