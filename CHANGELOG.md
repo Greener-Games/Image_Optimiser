@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/Greener-Games/Image_Optimiser/compare/v1.0.0...v1.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* include dist folder in npm release and bump version ([30db80d](https://github.com/Greener-Games/Image_Optimiser/commit/30db80dcd16c2c78608057b9d9a38f1b507273ac))
+
 # 1.0.0 (2026-07-29)
 
 
