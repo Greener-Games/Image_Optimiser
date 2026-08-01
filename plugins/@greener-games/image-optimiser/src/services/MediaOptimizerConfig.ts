@@ -15,11 +15,22 @@ export interface ICmsOptimizer {
    * Determine if this optimizer can handle the given URL.
    * By returning true, the system will use this optimizer for the image.
    */
-  canHandle(url: string): boolean;
+  canHandle(url: string): boolean | Promise<boolean>;
   /**
    * Apply transformations to the URL.
    */
-  optimize(url: string, options: TransformOptions): string;
+  optimize(url: string, options: TransformOptions): string | Promise<string>;
+}
+
+export interface AssetCacheInfo {
+  base: string;
+  width: number;
+  name: string;
+}
+
+export interface ICmsCacheIdentifier {
+  canHandle(url: string): boolean;
+  getAssetInfo(url: string): AssetCacheInfo;
 }
 
 export interface MediaOptimizerConfigData {
@@ -31,6 +42,10 @@ export interface MediaOptimizerConfigData {
    * Custom optimizers can be injected here. 
    */
   optimizers: ICmsOptimizer[];
+  /** 
+   * A registry of available cache identifiers. 
+   */
+  cacheIdentifiers: ICmsCacheIdentifier[];
   cacheName: string;
   expirationDays: number;
 }
@@ -50,14 +65,15 @@ const config = reactive<MediaOptimizerConfigData>({
   enableOptimization: true,
   imageSizeMap: DEFAULT_SIZE_MAP,
   optimizers: [],
+  cacheIdentifiers: [],
   cacheName: 'cd-image-cache-v1',
   expirationDays: 7,
 });
 
 export const setupMediaOptimizerConfig = (
-  newConfig: Partial<Omit<MediaOptimizerConfigData, 'optimizers'> & { optimizers?: ICmsOptimizer[] }>
+  newConfig: Partial<Omit<MediaOptimizerConfigData, 'optimizers' | 'cacheIdentifiers'> & { optimizers?: ICmsOptimizer[], cacheIdentifiers?: ICmsCacheIdentifier[] }>
 ) => {
-  const { imageSizeMap, optimizers, ...rest } = newConfig;
+  const { imageSizeMap, optimizers, cacheIdentifiers, ...rest } = newConfig;
 
   // Merge the rest of the simple config
   Object.assign(config, rest);
@@ -77,6 +93,10 @@ export const setupMediaOptimizerConfig = (
   // so they take precedence over built-in ones
   if (optimizers && optimizers.length > 0) {
     config.optimizers.unshift(...optimizers);
+  }
+
+  if (cacheIdentifiers && cacheIdentifiers.length > 0) {
+    config.cacheIdentifiers.unshift(...cacheIdentifiers);
   }
 };
 

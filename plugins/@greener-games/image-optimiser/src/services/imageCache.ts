@@ -22,29 +22,18 @@ export class ImageCacheService {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   }
 
-  /**
-   * Identifies the core asset ID/handle from a Hygraph URL to group different sizes together.
-   */
   private static getBaseAssetInfo(url: string): { base: string, width: number, name: string } {
-    try {
-      let width = 0;
-      let base = url;
-      const name = url.split('/').pop()?.split('?')[0] || 'unknown';
+    const config = useMediaOptimizerConfig();
+    const identifier = config.cacheIdentifiers?.find(id => id.canHandle(url));
+    
+    if (identifier) {
+      return identifier.getAssetInfo(url);
+    }
 
-      if (url.includes('cdn.hygraph.com')) {
-        const urlObj = new URL(url);
-        width = parseInt(urlObj.searchParams.get('width') || '0');
-        base = urlObj.origin + urlObj.pathname;
-      } else if (url.includes('graphassets.com')) {
-        const urlObj = new URL(url);
-        const segments = urlObj.pathname.split('/').filter(Boolean);
-        const handle = segments.pop() || '';
-        const resizeMatch = url.match(/resize=width:(\d+)/);
-        width = resizeMatch ? parseInt(resizeMatch[1]) : 0;
-        base = `${urlObj.origin}/${segments[0]}/${handle}`;
-      }
-      
-      return { base, width, name };
+    // Default Fallback
+    try {
+      const name = url.split('/').pop()?.split('?')[0] || 'unknown';
+      return { base: url, width: 0, name };
     } catch {
       return { base: url, width: 0, name: 'unknown' };
     }

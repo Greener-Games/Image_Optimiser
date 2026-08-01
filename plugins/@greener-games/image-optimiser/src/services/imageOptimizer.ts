@@ -4,7 +4,7 @@ import {
 } from './MediaOptimizerConfig';
 
 export class ImageOptimiser {
-  static getOptimizedUrl(url: string, size: ImageSize = 'm'): string {
+  static async getOptimizedUrl(url: string, size: ImageSize = 'm'): Promise<string> {
     const config = useMediaOptimizerConfig();
     
     if (!url || !config.enableOptimization) return url || '';
@@ -12,10 +12,10 @@ export class ImageOptimiser {
     const options = config.imageSizeMap[this.getConstrainedSize(size)];
     
     // Iterate through user-injected optimizers
-    const activeOptimizer = config.optimizers.find(opt => opt.canHandle(url));
-    
-    if (activeOptimizer) {
-      return activeOptimizer.optimize(url, options);
+    for (const opt of config.optimizers) {
+      if (await opt.canHandle(url)) {
+        return await opt.optimize(url, options);
+      }
     }
 
     // No optimizer matched, return original URL

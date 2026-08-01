@@ -1,11 +1,40 @@
 import type { ICmsOptimizer, TransformOptions } from '../services/MediaOptimizerConfig';
 
 export class HygraphOptimizer implements ICmsOptimizer {
-  canHandle(url: string): boolean {
-    return url.includes('cdn.hygraph.com') || url.includes('graphassets.com');
+  private static isSvgCache = new Map<string, boolean>();
+
+  async canHandle(url: string): Promise<boolean> {
+    if (!url.includes('cdn.hygraph.com') && !url.includes('graphassets.com')) {
+      return false;
+    }
+
+    if (url.toLowerCase().includes('.svg')) {
+      return false;
+    }
+
+    // Check memory cache first
+    if (HygraphOptimizer.isSvgCache.has(url)) {
+      return !HygraphOptimizer.isSvgCache.get(url);
+    }
+
+    try {
+      const response = await fetch(url, { method: 'HEAD' });
+      const contentType = response.headers.get('content-type');
+      const isSvg = contentType === 'image/svg+xml';
+      HygraphOptimizer.isSvgCache.set(url, isSvg);
+      
+      if (isSvg) {
+        return false;
+      }
+    } catch (e) {
+      // If network fails, we'll assume it's not an SVG and try to optimize it anyway.
+      HygraphOptimizer.isSvgCache.set(url, false);
+    }
+
+    return true;
   }
 
-  optimize(url: string, options: TransformOptions): string {
+  async optimize(url: string, options: TransformOptions): Promise<string> {
     if (url.includes('cdn.hygraph.com')) {
       if (url.includes('?')) return url;
 

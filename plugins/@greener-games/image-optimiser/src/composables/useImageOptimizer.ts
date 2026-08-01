@@ -4,8 +4,8 @@ import { ImageCacheService } from '../services/imageCache';
 import type { ImageSize } from '../services/MediaOptimizerConfig';
 
 export const useImageOptimizer = () => {
-  const getOptimizedUrl = (src: string, size: ImageSize = 'm') => {
-    return ImageOptimiser.getOptimizedUrl(src, size);
+  const getOptimizedUrl = async (src: string, size: ImageSize = 'm') => {
+    return await ImageOptimiser.getOptimizedUrl(src, size);
   };
 
   const getCachedUrl = async (url: string) => {
@@ -25,7 +25,7 @@ export const useImageOptimizer = () => {
     size: ImageSize = 'm'
   ): Promise<string> => {
     if (!src) return '';
-    const optimized = getOptimizedUrl(src, size);
+    const optimized = await getOptimizedUrl(src, size);
     return await getCachedUrl(optimized);
   };
 
@@ -47,7 +47,7 @@ export const useImageOptimizer = () => {
         return;
       }
 
-      const optimized = getOptimizedUrl(srcVal.value, sizeVal.value);
+      const optimized = await getOptimizedUrl(srcVal.value, sizeVal.value);
       displayUrl.value = await getCachedUrl(optimized);
     };
 
@@ -86,7 +86,7 @@ export const useImageOptimizer = () => {
             results[key] = '';
             return;
           }
-          const optimized = getOptimizedUrl(src, size);
+          const optimized = await getOptimizedUrl(src, size);
           results[key] = await getCachedUrl(optimized);
         })
       );

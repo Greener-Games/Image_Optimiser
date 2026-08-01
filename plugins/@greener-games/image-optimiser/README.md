@@ -24,7 +24,7 @@ Install the plugin in your Vue application instance using `createMediaOptimizerP
 ```typescript
 import { createApp } from 'vue';
 import App from './App.vue';
-import { createMediaOptimizerPlugin, HygraphOptimizer } from '@greener-games/image-optimiser';
+import { createMediaOptimizerPlugin, HygraphOptimizer, HygraphCacheIdentifier } from '@greener-games/image-optimiser';
 
 const app = createApp(App);
 
@@ -32,9 +32,10 @@ const app = createApp(App);
 app.use(createMediaOptimizerPlugin({
   enableCaching: true,
   enableOptimization: true,
-  // Note: The plugin ships with NO active optimizers by default.
-  // You MUST inject the optimizers you wish to use.
-  optimizers: [new HygraphOptimizer()] 
+  // Note: The plugin ships with NO active optimizers or cache identifiers by default.
+  // You MUST inject the ones you wish to use.
+  optimizers: [new HygraphOptimizer()],
+  cacheIdentifiers: [new HygraphCacheIdentifier()] 
 }));
 
 app.mount('#app');
@@ -48,11 +49,11 @@ The plugin ships with a `HygraphOptimizer` and a `DefaultFallbackOptimizer`. You
 import type { ICmsOptimizer, TransformOptions } from '@greener-games/image-optimiser';
 
 export class CustomCloudinaryOptimizer implements ICmsOptimizer {
-  canHandle(url: string): boolean {
+  async canHandle(url: string): Promise<boolean> {
     return url.includes('res.cloudinary.com');
   }
 
-  optimize(url: string, options: TransformOptions): string {
+  async optimize(url: string, options: TransformOptions): Promise<string> {
     // Implement your own URL transformation logic here!
     const widthParam = options.width ? `w_${options.width}` : '';
     // ... parse URL and inject parameters ...
@@ -60,6 +61,30 @@ export class CustomCloudinaryOptimizer implements ICmsOptimizer {
   }
 }
 ```
+
+## Creating a Custom Cache Identifier
+
+To allow the smart caching layer to understand how to read dimensions and base URLs from your custom CMS URLs, you can inject custom `ICmsCacheIdentifier` classes.
+
+```typescript
+import type { ICmsCacheIdentifier, AssetCacheInfo } from '@greener-games/image-optimiser';
+
+export class CloudinaryCacheIdentifier implements ICmsCacheIdentifier {
+  canHandle(url: string): boolean {
+    return url.includes('res.cloudinary.com');
+  }
+
+  getAssetInfo(url: string): AssetCacheInfo {
+    // Parse your URL to extract the base URL, requested width, and filename
+    return {
+      base: 'https://res.cloudinary.com/my-cloud/image',
+      width: 800,
+      name: 'my-image.jpg'
+    };
+  }
+}
+```
+
 
 ## Usage
 
@@ -98,7 +123,7 @@ You can also bypass the Vue reactivity system and use the services directly:
 import { ImageCacheService, ImageOptimiser } from '@greener-games/image-optimiser';
 
 // Get a transformed URL based on the active optimizers
-const optimized = ImageOptimiser.getOptimizedUrl('https://...', 'lg');
+const optimized = await ImageOptimiser.getOptimizedUrl('https://...', 'lg');
 
 // Fetch and cache the URL, returning a blob URL for immediate use
 const blobUrl = await ImageCacheService.getImageUrl(optimized);

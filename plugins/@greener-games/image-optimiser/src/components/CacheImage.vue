@@ -26,7 +26,7 @@ const loadImage = async () => {
     return;
   }
   
-  const urlToFetch = ImageOptimiser.getOptimizedUrl(props.src, props.size);
+  const urlToFetch = await ImageOptimiser.getOptimizedUrl(props.src, props.size);
   optimizedUrl.value = await ImageCacheService.getImageUrl(urlToFetch);
 };
 
