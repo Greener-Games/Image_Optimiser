@@ -134,3 +134,4 @@
 - **Semantic Colors**: Prioritize generic semantic utility classes (e.g., `text-primary`, `bg-background`) over brand-specific ones.
 - **Anti-Gravity CLI (Local vs. Remote)**: When running locally on the user's machine, **never** automatically run linters, TS checks, formatters, etc. Instead, prompt the user to run the checks manually.
 - **Token Optimization**: Give concise responses. Avoid filler and pleasantries. Output targeted code modifications (e.g., using diffs or search-and-replace blocks) rather than outputting entire files unless requested.
+- **Documentation**: Always ensure that the `README.md` is updated to reflect any new features, API changes, or configuration options before concluding a task or deployment.
