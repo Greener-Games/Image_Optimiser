@@ -32,6 +32,10 @@ const app = createApp(App);
 app.use(createMediaOptimizerPlugin({
   enableCaching: true,
   enableOptimization: true,
+  // Set the internal log level ('off' | 'low' | 'high')
+  // 'low': Errors and warnings only
+  // 'high': All cache hits/misses and network fetches
+  logLevel: 'off',
   // Note: The plugin ships with NO active optimizers or cache identifiers by default.
   // You MUST inject the ones you wish to use.
   optimizers: [new HygraphOptimizer()],
