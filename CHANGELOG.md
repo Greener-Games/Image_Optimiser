@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/Greener-Games/Image_Optimiser/compare/v1.0.2...v1.0.3) (2026-08-01)
+
+
+### Bug Fixes
+
+* refactor providers folder structure and add DefaultFallbackCacheIdentifier ([38c7bdb](https://github.com/Greener-Games/Image_Optimiser/commit/38c7bdb570e3686260ffdcaebf2eb1d6f8f1029b))
+
 ## [1.0.2](https://github.com/Greener-Games/Image_Optimiser/compare/v1.0.1...v1.0.2) (2026-08-01)
 
 
