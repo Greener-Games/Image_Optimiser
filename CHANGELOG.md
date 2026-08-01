@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/Greener-Games/Image_Optimiser/compare/v1.0.1...v1.0.2) (2026-08-01)
+
+
+### Bug Fixes
+
+* async optimizer pipeline and extensible cache identifiers for svg support ([55d5be6](https://github.com/Greener-Games/Image_Optimiser/commit/55d5be64e8d979594c77e26a590ccea338ad5e1e))
+
 ## [1.0.1](https://github.com/Greener-Games/Image_Optimiser/compare/v1.0.0...v1.0.1) (2026-07-30)
 
 
