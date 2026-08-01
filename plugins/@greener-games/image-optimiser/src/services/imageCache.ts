@@ -1,4 +1,5 @@
 import { useMediaOptimizerConfig } from './MediaOptimizerConfig';
+import { Logger } from './Logger';
 
 
 interface CacheMetadata {
@@ -89,7 +90,7 @@ export class ImageCacheService {
     const exactMatch = await cache.match(url);
     if (exactMatch && !this.isStale(url)) {
       const blob = await exactMatch.blob();
-        console.log(`[Cache Service] Exact match found: ${name}`);
+        Logger.info(`Exact match found: ${name}`);
         return this.createBlobUrl(url, blob);
       }
 
@@ -103,14 +104,14 @@ export class ImageCacheService {
           const cachedResponse = await cache.match(request);
           if (cachedResponse && !this.isStale(cachedUrl)) {
             const blob = await cachedResponse.blob();
-            console.log(`[Cache Service] Smart match found: ${name} (Using ${cachedWidth}px for ${requestedWidth}px request)`);
+            Logger.info(`Smart match found: ${name} (Using ${cachedWidth}px for ${requestedWidth}px request)`);
             return this.createBlobUrl(url, blob);
           }
         }
       }
 
       // 3. Fetch from Network
-      console.log(`[Cache Service] Fetching from network: ${name}`);
+      Logger.info(`Fetching from network: ${name}`);
       const response = await fetch(url, {
         mode: 'cors',
         credentials: 'same-origin'
@@ -123,7 +124,7 @@ export class ImageCacheService {
         await cache.put(url, responseClone);
         this.updateMetadata(url);
 
-        console.log(`[Cache Service] Cached new asset: ${name} (${this.formatSize(blobForSize.size)})`);
+        Logger.info(`Cached new asset: ${name} (${this.formatSize(blobForSize.size)})`);
 
         const blob = await response.blob();
         return this.createBlobUrl(url, blob);
@@ -132,7 +133,7 @@ export class ImageCacheService {
       // Fallback to direct URL if fetch fails
       return url;
     } catch (e) {
-      console.error('[Cache Service] Failed to fetch/cache image:', name, e);
+      Logger.error('Failed to fetch/cache image:', name, e);
       return url; // Return original URL so image can still try to load via <img> tag
     }
   }

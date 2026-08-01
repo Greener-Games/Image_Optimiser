@@ -48,6 +48,13 @@ export interface MediaOptimizerConfigData {
   cacheIdentifiers: ICmsCacheIdentifier[];
   cacheName: string;
   expirationDays: number;
+  /**
+   * Log level for the internal logger.
+   * 'off': no logs
+   * 'low': errors and warnings only
+   * 'high': all logs (including cache hits/misses)
+   */
+  logLevel: 'off' | 'low' | 'high';
 }
 
 export const DEFAULT_SIZE_MAP: Record<ImageSize, TransformOptions> = {
@@ -68,6 +75,7 @@ const config = reactive<MediaOptimizerConfigData>({
   cacheIdentifiers: [],
   cacheName: 'cd-image-cache-v1',
   expirationDays: 7,
+  logLevel: 'off',
 });
 
 export const setupMediaOptimizerConfig = (

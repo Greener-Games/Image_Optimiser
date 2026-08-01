@@ -2,6 +2,7 @@ import { ref, watch, computed } from 'vue';
 import { ImageOptimiser } from '../services/imageOptimizer';
 import { ImageCacheService } from '../services/imageCache';
 import type { ImageSize } from '../services/MediaOptimizerConfig';
+import { Logger } from '../services/Logger';
 
 export const useImageOptimizer = () => {
   const getOptimizedUrl = async (src: string, size: ImageSize = 'm') => {
@@ -12,7 +13,7 @@ export const useImageOptimizer = () => {
     try {
       return await ImageCacheService.getImageUrl(url);
     } catch (e) {
-      console.error('useImageOptimizer: Failed to resolve cached image', e);
+      Logger.error('Failed to resolve cached image:', e);
       return url;
     }
   };
