@@ -1,4 +1,4 @@
-import type { ICmsCacheIdentifier, AssetCacheInfo } from '../services/MediaOptimizerConfig';
+import type { ICmsCacheIdentifier, AssetCacheInfo } from '../../services/MediaOptimizerConfig';
 
 export class HygraphCacheIdentifier implements ICmsCacheIdentifier {
   canHandle(url: string): boolean {

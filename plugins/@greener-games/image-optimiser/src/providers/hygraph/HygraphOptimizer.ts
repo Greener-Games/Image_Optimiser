@@ -1,4 +1,4 @@
-import type { ICmsOptimizer, TransformOptions } from '../services/MediaOptimizerConfig';
+import type { ICmsOptimizer, TransformOptions } from '../../services/MediaOptimizerConfig';
 
 export class HygraphOptimizer implements ICmsOptimizer {
   private static isSvgCache = new Map<string, boolean>();

@@ -1,4 +1,4 @@
-import type { ICmsOptimizer, TransformOptions } from '../services/MediaOptimizerConfig';
+import type { ICmsOptimizer, TransformOptions } from '../../services/MediaOptimizerConfig';
 
 export class DefaultFallbackOptimizer implements ICmsOptimizer {
   canHandle(_url: string): boolean {
