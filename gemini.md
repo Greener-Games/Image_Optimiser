@@ -114,6 +114,8 @@
 ## Task Management & Documentation
 - **Checklist Format**: `[ ]` for pending, `[X]` for completed.
 - **Completion Summaries**: Provide a concise summary of the specific actions performed after marking a task as complete.
+- **README Updates**: **Must** keep the README up to date when making amendments (this README will either be at the root of the project, or in the case of plugins, will be in the plugins folder).
+- **Deployment and Commits**: Read the [Release Process documentation](./.supporting_docs/RELEASE_PROCESS.md) for rules regarding git commit tags/prefixes (e.g., `feat`, `fix`, `docs`) and how they interact with the automated deployment system. Use `docs` when updating a doc without wanting to trigger a release.
 
 ## Common Commands
 - Development: `npm run dev`
@@ -134,4 +136,3 @@
 - **Semantic Colors**: Prioritize generic semantic utility classes (e.g., `text-primary`, `bg-background`) over brand-specific ones.
 - **Anti-Gravity CLI (Local vs. Remote)**: When running locally on the user's machine, **never** automatically run linters, TS checks, formatters, etc. Instead, prompt the user to run the checks manually.
 - **Token Optimization**: Give concise responses. Avoid filler and pleasantries. Output targeted code modifications (e.g., using diffs or search-and-replace blocks) rather than outputting entire files unless requested.
-- **Documentation**: Always ensure that the `README.md` is updated to reflect any new features, API changes, or configuration options before concluding a task or deployment.
