@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/Greener-Games/Image_Optimiser/compare/v1.0.3...v1.0.4) (2026-08-01)
+
+
+### Bug Fixes
+
+* implement internal configurable Logger and untrack node_modules ([02ee976](https://github.com/Greener-Games/Image_Optimiser/commit/02ee976c0862c73d774a0501f3697d8fdd433ad4))
+
 ## [1.0.3](https://github.com/Greener-Games/Image_Optimiser/compare/v1.0.2...v1.0.3) (2026-08-01)
 
 
