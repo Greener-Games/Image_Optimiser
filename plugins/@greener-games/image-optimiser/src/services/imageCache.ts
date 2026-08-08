@@ -87,11 +87,15 @@ export class ImageCacheService {
       const cache = await caches.open(config.cacheName);
 
       // 1. Check for exact match first
-    const exactMatch = await cache.match(url);
-    if (exactMatch && !this.isStale(url)) {
-      const blob = await exactMatch.blob();
-        Logger.info(`Exact match found: ${name}`);
-        return this.createBlobUrl(url, blob);
+      const exactMatch = await cache.match(url);
+      if (exactMatch) {
+        if (!this.isStale(url)) {
+          const blob = await exactMatch.blob();
+          Logger.info(`Exact match found: ${name}`);
+          return this.createBlobUrl(url, blob);
+        }
+        // Stale: evict so it doesn't linger in the Cache API/localStorage forever
+        await this.evictCacheEntry(cache, url);
       }
 
       // 2. SMART CACHE CHECK: Look for siblings (same asset, different size)
@@ -101,8 +105,12 @@ export class ImageCacheService {
         const { base: cachedBase, width: cachedWidth } = this.getBaseAssetInfo(cachedUrl);
 
         if (base === cachedBase && cachedWidth >= requestedWidth && requestedWidth > 0) {
+          if (this.isStale(cachedUrl)) {
+            await this.evictCacheEntry(cache, cachedUrl);
+            continue;
+          }
           const cachedResponse = await cache.match(request);
-          if (cachedResponse && !this.isStale(cachedUrl)) {
+          if (cachedResponse) {
             const blob = await cachedResponse.blob();
             Logger.info(`Smart match found: ${name} (Using ${cachedWidth}px for ${requestedWidth}px request)`);
             return this.createBlobUrl(url, blob);
@@ -139,9 +147,22 @@ export class ImageCacheService {
   }
 
   private static createBlobUrl(originalUrl: string, blob: Blob): string {
+    const existing = this.blobGuiRegistry.get(originalUrl);
+    if (existing) {
+      URL.revokeObjectURL(existing);
+    }
     const blobUrl = URL.createObjectURL(blob);
     this.blobGuiRegistry.set(originalUrl, blobUrl);
     return blobUrl;
+  }
+
+  /**
+   * Removes a stale entry from the Cache API and its associated localStorage
+   * metadata so both stores don't grow unbounded with dead entries.
+   */
+  private static async evictCacheEntry(cache: Cache, url: string): Promise<void> {
+    await cache.delete(url);
+    localStorage.removeItem(`cache_meta_${url}`);
   }
 
   /**

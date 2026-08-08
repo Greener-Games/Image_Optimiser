@@ -1,31 +1,11 @@
-# Vue 3 + TypeScript + Vite + Plugins
+# Image Optimiser
 
-This robust, highly-automated boilerplate supports standard application development, NPM plugin development, Electron app creation, and Browser Extension building. It comes fully equipped with a unified CI/CD pipeline powered by `semantic-release`.
+This repository is the home of [`@greener-games/image-optimiser`](./plugins/@greener-games/image-optimiser), a Vue 3 plugin that provides an optimized `<CacheImage>` component, composables, and services for caching and transforming images from Hygraph, other CDNs, or custom providers.
 
-## Setup Script
+- **Plugin source & docs**: [`plugins/@greener-games/image-optimiser`](./plugins/@greener-games/image-optimiser) — see that package's [README](./plugins/@greener-games/image-optimiser/README.md) for installation, configuration, and usage.
+- **Demo app**: The root `src/` folder is a small Vue app used to exercise the plugin during development (see `src/main.ts` for example wiring, including a custom `CustomCloudinaryOptimizer`).
 
-This project strictly relies on a CLI setup script to intelligently scaffold your architecture, build your GitHub Actions, and dynamically wire up your workspace. 
-
-Run the setup script to begin:
-
-```sh
-node .templateScripts/setup.cjs
-```
-
-### Options
-
-1. **Project Development**: Scaffolds a standard frontend web application, configuring CI/CD hosting deployments based on your cloud provider of choice.
-2. **Plugin Development**: Scaffolds a new plugin (Vue UI Component Library, Vue Plugin, Vite Plugin, or generic TS Utility). Automatically configures workspace logic and NPM publishing pipelines.
-3. **Electron App**: Scaffolds an Electron desktop application setup and links it to a desktop-specific release pipeline.
-4. **Browser Extension**: Scaffolds a Chrome/Firefox/Edge extension setup.
-
-## Documentation Generation
-
-During plugin development, the CLI will ask if you want to deploy documentation. If you opt-in:
-- The script dynamically injects an interactive **VitePress** documentation site into your new plugin's `docs/` folder.
-- It seamlessly updates your `publish_package.yml` CI pipeline to deploy your docs to GitHub Pages immediately following a successful NPM package release!
-
-Run `npm run docs:dev` inside your plugin folder to preview your site.
+This workspace was originally scaffolded from a shared Vue 3 + Vite plugin-development template, and comes with a unified CI/CD pipeline powered by `semantic-release` (see [`.supporting_docs/RELEASE_PROCESS.md`](./.supporting_docs/RELEASE_PROCESS.md) for how releases and commit prefixes work).
 
 ## Recommended IDE Setup
 
