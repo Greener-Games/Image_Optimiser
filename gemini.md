@@ -51,7 +51,7 @@
 - **Mandatory Function Comments**: Every function, action, and composable must include a brief JSDoc comment.
     - **Standard**: Comments should be an *addition* to self-documenting code, explaining the "why" or providing a quick summary, not just restating the function name.
 - **Concise Logic**: Avoid "death by comments." Keep inline comments extremely brief and only use them when logic is non-obvious.
-- **Unit Testing**: Tests (Vitest/Cypress) are only to be generated upon explicit request.
+- **Unit Testing**: Vitest is configured and has a working suite under `plugins/@greener-games/image-optimiser` (run via `npm run test`). When you touch code that already has tests, update them in the same change instead of leaving them stale. When you add non-trivial new logic (services, composables, URL/data transforms, anything with real edge cases), add tests for it rather than waiting to be asked.
 
 ### State Management (Pinia)
 - **Setup Store Syntax**: Use the function syntax (`defineStore('id', () => { ... })`).
@@ -122,11 +122,12 @@
 - Build: `npm run build`
 - Type Check: `npm run type-check`
 - Linting: `npm run lint`
+- Testing: `npm run test`
 
 ## Specific Instructions for Gemini
 - **Template Order**: Follow **template -> script -> style**.
 - **Naming & JSDoc**: Use intent-revealing names and include a one-line JSDoc header for all functions. For files, strictly use `[name].store.ts` for stores and `[name].service.ts` for services.
-- **No Automatic Tests**: Do not generate test files unless specifically asked.
+- **Keep Tests Current**: Vitest is already wired up and passing — don't treat tests as opt-in. Update existing tests whenever you change the behavior they cover, and add new ones for meaningful new logic as part of the same change.
 - **Robust Error Handling**: Always include `try-catch` blocks with console logging and a UI feedback strategy (e.g., loading states) for async logic.
 - **Mobile-First**: Generate responsive layouts by default.
 - **Incorporate Motion**: Suggest or implement subtle micro-animations (e.g., `hover:scale-105 transition-all`) for interactive elements.
