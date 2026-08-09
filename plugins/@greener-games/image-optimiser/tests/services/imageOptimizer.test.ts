@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { ImageOptimiser } from './imageOptimizer';
-import { setupMediaOptimizerConfig, useMediaOptimizerConfig, DEFAULT_SIZE_MAP, type ICmsOptimizer } from './MediaOptimizerConfig';
+import { ImageOptimiser } from '../../src/services/imageOptimizer';
+import { setupMediaOptimizerConfig, useMediaOptimizerConfig, DEFAULT_SIZE_MAP, type ICmsOptimizer } from '../../src/services/MediaOptimizerConfig';
 
 const resetConfig = () => {
   const config = useMediaOptimizerConfig();

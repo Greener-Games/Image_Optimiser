@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { HygraphOptimizer } from './HygraphOptimizer';
+import { HygraphOptimizer } from '../../../src/providers/hygraph/HygraphOptimizer';
 
 describe('HygraphOptimizer', () => {
   afterEach(() => vi.restoreAllMocks());

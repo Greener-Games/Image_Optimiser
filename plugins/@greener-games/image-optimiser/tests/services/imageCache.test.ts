@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { ImageCacheService } from './imageCache';
-import { setupMediaOptimizerConfig, useMediaOptimizerConfig, type ICmsCacheIdentifier } from './MediaOptimizerConfig';
+import { ImageCacheService } from '../../src/services/imageCache';
+import { setupMediaOptimizerConfig, useMediaOptimizerConfig, type ICmsCacheIdentifier } from '../../src/services/MediaOptimizerConfig';
 
 const createFakeCache = () => {
   const store = new Map<string, { blob: unknown }>();

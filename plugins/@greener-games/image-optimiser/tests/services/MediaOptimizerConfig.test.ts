@@ -7,7 +7,7 @@ import {
   type TransformOptions,
   type ICmsOptimizer,
   type ICmsCacheIdentifier,
-} from './MediaOptimizerConfig';
+} from '../../src/services/MediaOptimizerConfig';
 
 const resetConfig = () => {
   const config = useMediaOptimizerConfig();

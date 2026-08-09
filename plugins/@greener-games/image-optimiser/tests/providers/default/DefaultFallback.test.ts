@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { DefaultFallbackOptimizer } from './DefaultFallbackOptimizer';
-import { DefaultFallbackCacheIdentifier } from './DefaultFallbackCacheIdentifier';
+import { DefaultFallbackOptimizer } from '../../../src/providers/default/DefaultFallbackOptimizer';
+import { DefaultFallbackCacheIdentifier } from '../../../src/providers/default/DefaultFallbackCacheIdentifier';
 
 describe('DefaultFallbackOptimizer', () => {
   const optimizer = new DefaultFallbackOptimizer();

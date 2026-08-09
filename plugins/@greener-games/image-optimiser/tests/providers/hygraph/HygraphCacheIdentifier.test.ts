@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { HygraphCacheIdentifier } from './HygraphCacheIdentifier';
+import { HygraphCacheIdentifier } from '../../../src/providers/hygraph/HygraphCacheIdentifier';
 
 describe('HygraphCacheIdentifier', () => {
   const identifier = new HygraphCacheIdentifier();
