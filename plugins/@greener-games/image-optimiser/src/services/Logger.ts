@@ -7,19 +7,19 @@ export class Logger {
     return useMediaOptimizerConfig().logLevel;
   }
 
-  static info(...args: any[]): void {
+  static info(...args: unknown[]): void {
     if (this.level === 'high') {
       console.log(this.PREFIX, ...args);
     }
   }
 
-  static warn(...args: any[]): void {
+  static warn(...args: unknown[]): void {
     if (this.level === 'low' || this.level === 'high') {
       console.warn(this.PREFIX, ...args);
     }
   }
 
-  static error(...args: any[]): void {
+  static error(...args: unknown[]): void {
     if (this.level === 'low' || this.level === 'high') {
       console.error(this.PREFIX, ...args);
     }

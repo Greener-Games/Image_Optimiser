@@ -26,7 +26,7 @@ export class HygraphOptimizer implements ICmsOptimizer {
       if (isSvg) {
         return false;
       }
-    } catch (e) {
+    } catch {
       // If network fails, we'll assume it's not an SVG and try to optimize it anyway.
       HygraphOptimizer.isSvgCache.set(url, false);
     }
@@ -34,7 +34,7 @@ export class HygraphOptimizer implements ICmsOptimizer {
     return true;
   }
 
-  async optimize(url: string, options: TransformOptions): Promise<string> {
+  optimize(url: string, options: TransformOptions): string {
     if (url.includes('cdn.hygraph.com')) {
       if (url.includes('?')) return url;
 
