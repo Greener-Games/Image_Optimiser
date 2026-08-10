@@ -1,3 +1,10 @@
+## [1.0.5](https://github.com/Greener-Games/Image_Optimiser/compare/v1.0.4...v1.0.5) (2026-08-10)
+
+
+### Bug Fixes
+
+* release pipeline node_modules bug, add test coverage, close cache leaks ([1bccfbb](https://github.com/Greener-Games/Image_Optimiser/commit/1bccfbbbc34a255966bbd9c0bb7bbf133a1428fc))
+
 ## [1.0.4](https://github.com/Greener-Games/Image_Optimiser/compare/v1.0.3...v1.0.4) (2026-08-01)
 
 
