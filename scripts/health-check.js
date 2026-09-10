@@ -206,8 +206,19 @@ const main = async () => {
   console.log('📝 Generating health-report.md...');
   const mdContent = generateMarkdown(results);
   fs.writeFileSync(reportPath, mdContent, 'utf8');
-  
+
+  const hasFailures = results.some((res) => !res.allowFail && !res.success);
+  if (hasFailures) {
+    console.log(`\n❌ Health check failed: one or more blocking checks did not pass.`);
+    process.exitCode = 1;
+  } else {
+    console.log(`\n✅ All blocking health checks passed.`);
+  }
+
   console.log(`\n🎉 Done! Open 'health-report.md' in your IDE to view the dashboard.`);
 };
 
-main().catch(console.error);
+main().catch((err) => {
+  console.error(err);
+  process.exitCode = 1;
+});

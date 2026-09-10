@@ -16,6 +16,7 @@
     "type-check": "vue-tsc --noEmit",
     "test": "npm run test --workspaces --if-present",
     "health": "node scripts/health-check.js",
+    "health-check": "node scripts/health-check.js",
     "release": "semantic-release",
     "deps:audit": "npm audit",
     "deps:outdated": "npm outdated",

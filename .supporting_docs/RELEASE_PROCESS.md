@@ -1,78 +1,139 @@
-# Unified Release Process
+# Unified Release & CI/CD Process
 
-This project uses a highly automated, sequential release pipeline powered by `semantic-release` and GitHub Actions. This ensures a consistent, secure, and fully hands-off workflow for versioning, publishing, and documenting every package.
+This project uses a highly automated, sequential CI/CD and release pipeline powered by a **single unified GitHub Actions workflow** (`ci-cd.yml`), **modular composite actions** (`.github/actions/`), and **`semantic-release`**. This ensures quality control, automated semantic versioning, and secure deployments within a single, cohesive workflow run.
+
+---
+
+## Process Flow Diagram
+
+```mermaid
+flowchart TD
+    subgraph Trigger["Git Event"]
+        PR["Pull Request (PR)"]
+        PushDev["Push to dev / development"]
+        PushMaster["Push to master / main"]
+    end
+
+    subgraph Pipeline["Unified CI/CD Pipeline (ci-cd.yml)"]
+        subgraph Gatekeeper["1. Quality Gate"]
+            BuildTest["Matrix Build & Tests<br/>(Node 20.x & 22.x)<br/>• fail-fast: true"]
+            HealthCheck["Health Check (health-check)<br/>• Waits for Build & Tests<br/>• Runs Linters, Type-Check, Audit<br/>• Comments report to PR<br/>• Blocks downstream release on failure"]
+        end
+
+        subgraph Versioning["2. Versioning Engine"]
+            Semantic["Semantic Release (release)<br/>• Analyzes commit history<br/>• Calculates next version<br/>• Tags Git & updates CHANGELOG.md"]
+        end
+
+        subgraph Deployment["3. Branching Deployment (.github/actions/*)"]
+            PublishNPM["publish-npm<br/>• Dry-run on PRs & dev<br/>• Publishes to NPM on master<br/>• Optional VitePress Docs deployment"]
+        end
+    end
+
+    PR --> BuildTest
+    PushDev --> BuildTest
+    PushMaster --> BuildTest
+
+    BuildTest -->|Passes| HealthCheck
+    BuildTest -.->|Fails| FailCI[Pipeline Fails & Early Exit]
+
+    HealthCheck -->|Fails Blocking Checks| FailGate[Release Blocked]
+    HealthCheck -->|Passed & Branch Push| Semantic
+
+    Semantic -->|New Release Published| PublishNPM
+```
+
+---
 
 ## How It Works
 
-The release process relies on a tightly coupled architecture using `workflow_call` rather than disconnected, tag-based triggers.
+### 1. The CI Gatekeeper (`build-and-test` & `health-check`)
 
-### 1. The Versioning Engine (`release.yml`)
+Every push and pull request executes through continuous integration with strict **early-exit fail-fast** mechanisms:
 
-The primary orchestrator is `.github/workflows/release.yml`.
+1. **Matrix Build & Tests (`build-and-test`):**
+   - Compiles all workspaces and the root app across supported Node.js versions (20.x, 22.x) and runs unit test suites.
+   - **`fail-fast: true`:** If either Node runner fails, the entire matrix cancels immediately.
+2. **Health Check (`health-check`):**
+   - **`needs: build-and-test`:** Only starts **after** matrix builds and tests pass completely.
+   - Runs format checks (Prettier), linters (ESLint, Stylelint), TypeScript type-checking (Vue TSC), and dependency audits.
+   - Generates a markdown health report (`health-report.md`).
+   - **On Pull Requests:** Posts or updates a single pinned summary comment on the PR.
+   - **On Branch Pushes (`master`/`dev`):** Publishes the report to the GitHub Actions Job Summary.
+   - **Release Gate:** If any blocking check fails, the health check exits with code 1, which blocks semantic versioning and deployment from ever running.
 
-- **Trigger:** Pushing commits or merging pull requests into `master`, `main`, `dev`, or `development`.
-- **Process:**
-  1. The workflow spins up and runs `semantic-release`.
-  2. `semantic-release` parses your commit history looking for [Conventional Commits](https://www.conventionalcommits.org/) (e.g., `feat:`, `fix:`, `BREAKING CHANGE:`).
-  3. It calculates the correct next semantic version.
-  4. It bumps the `version` field in your `package.json`, generates a new `CHANGELOG.md` entry, creates a Git tag, and publishes a GitHub Release.
-  5. Finally, if a new release was created, it strictly passes the new version number to the deployment workflow.
+---
 
-### 2. The Deployment Execution
+### 2. The Versioning Engine (`release`)
 
-Once `semantic-release` finishes, `release.yml` triggers the secondary publish workflow natively configured for your project type (e.g., `publish_package.yml` for NPM plugins, or `release-electron.yml` for Electron apps).
+The versioning job runs sequentially in the same workflow after `health-check`:
 
-#### NPM Packages (`publish_package.yml`)
-- Runs a build of the workspace (`npm run build`).
-- **Dry Run:** On a Pull Request, it runs `npm publish --dry-run` to validate package integrity safely.
-- **Production Publish:** On a successful push to your main branches, it runs `npm publish --access public` using the `NPM_TOKEN` to push the package to the NPM registry.
+- **Dependency:** `needs: health-check` — only triggers when quality checks pass on `master`, `main`, `dev`, or `development`.
+- **Execution:**
+  1. `semantic-release` analyzes commit messages since the last release according to [Conventional Commits](https://www.conventionalcommits.org/).
+  2. It computes the appropriate version bump (`feat:` $\rightarrow$ minor, `fix:` $\rightarrow$ patch, `BREAKING CHANGE:` $\rightarrow$ major).
+  3. Updates `package.json`, generates `CHANGELOG.md`, tags the Git repository, and publishes GitHub Release notes.
+  4. Emits `new_release_published` and `new_release_version` outputs to downstream deployment jobs.
 
-#### Application Deployments (`deploy-webapp.yml`, `release-electron.yml`, etc.)
-- Depending on the architecture scaffolded by the setup script, the pipeline will build and upload your compiled application (e.g., to Firebase, Azure, or as a GitHub Release binary artifact).
+---
 
-### 3. The Documentation Stage (VitePress)
+### 3. Modular Deployment (`publish-npm`)
 
-If you elected to deploy documentation to GitHub Pages when scaffolding your plugin:
-- A `DEPLOY_DOCS` flag is permanently embedded in your `publish_package.yml`.
-- Immediately after your NPM publish succeeds, a composite action (`deploy-github-pages`) natively triggers within the same runner.
-- It builds your VitePress site (`npm run docs:build`) and securely pushes the artifacts to GitHub Pages without requiring separate orchestration.
+Deployment logic is modularized into reusable **composite actions** under `.github/actions/`:
+
+| Action | Target | Behavior |
+| :--- | :--- | :--- |
+| **`setup-node-build`** | All | Shared setup for Node.js caching, dependency installation (`npm ci`), and build execution. |
+| **`publish-npm`** | Plugin | Handles `--dry-run` on PR/dev, live publishing to NPM on `master`, and optional VitePress docs deployment. |
+| **`deploy-github-pages`** | Docs / Web App | Configures GitHub Pages, uploads dist artifact, and triggers deployment. |
+
+---
+
+### 4. Environment & Deployment Behaviors
+
+| Stage | Pull Request (PR) | `dev` / Staging | `master` / Production |
+| :--- | :--- | :--- | :--- |
+| **Health Check (`npm run health-check`)** | 🩺 **Runs & comments on PR** | 🩺 **Runs & gates release** | 🩺 **Runs & gates release** |
+| **NPM Package Publishing** | 🧪 **Dry Run** (`--dry-run`) | 🧪 **Dry Run** (`--dry-run`) | 🚀 **Live Publish** (`--access public`) |
+| **VitePress Docs Deployment** | ⏭️ Skipped | ⏭️ Skipped | 🚀 **Deployed to GitHub Pages** *(if enabled)* |
+| **Semantic Release Tag** | ⏭️ Skipped | 🏷️ Prerelease tag (`v1.0.0-dev.1`) | 🏷️ Official release tag (`v1.0.0`) |
 
 ---
 
 ## Developer & Agent Responsibilities
 
 > [!IMPORTANT]  
-> **For AI Agents & Developers:** Because this system is completely automated and sequential, your primary responsibility is to **write meaningful commit messages** following the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/). Do not attempt to manually bump versions in `package.json` or manually create release tags.
+> Because this system is completely automated and sequential, your primary responsibility is to **write meaningful commit messages** following the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/). Do not attempt to manually bump versions in `package.json` or manually create release tags.
 
-The automation will handle the versioning, changelogs, publishing, and documentation hosting entirely on its own based on the commit prefixes used!
+### Commit Types and Release Triggers
 
-## Commit Types and Release Triggers
+#### Triggers a Release
 
-When writing commit messages (or when agents are generating commits), use the following standard prefixes:
+- **`feat:`** - A new feature. Triggers a **MINOR** version bump (e.g., `1.0.0` $\rightarrow$ `1.1.0`).
+- **`fix:`** - A bug fix. Triggers a **PATCH** version bump (e.g., `1.0.0` $\rightarrow$ `1.0.1`).
+- **`perf:`** - A code change that improves performance. Triggers a **PATCH** version bump.
+- **`BREAKING CHANGE:`** (or `!` after prefix like `feat!:`) - An API breaking change. Triggers a **MAJOR** version bump (e.g., `1.0.0` $\rightarrow$ `2.0.0`).
 
-### Triggers a Release
-* **`feat:`** - A new feature. Triggers a **MINOR** version bump (e.g., 1.0.0 -> 1.1.0).
-* **`fix:`** - A bug fix. Triggers a **PATCH** version bump (e.g., 1.0.0 -> 1.0.1).
-* **`perf:`** - A code change that improves performance. Triggers a **PATCH** version bump.
-* **`BREAKING CHANGE:`** (or `!` after the prefix like `feat!:` or `fix!:`) - An API breaking change. Triggers a **MAJOR** version bump (e.g., 1.0.0 -> 2.0.0).
+#### Does NOT Trigger a Release (Safe for internal updates)
 
-### Does NOT Trigger a Release (Safe to use for internal updates)
-Use these prefixes when you want to update the repository without triggering the CI/CD deployment pipeline:
-* **`docs:`** - Documentation only changes (e.g., updating the README). Use this when updating a doc but you are not wanting to trigger a release.
-* **`chore:`** - Changes to the build process or auxiliary tools and libraries (e.g., updating dependencies, modifying `.gitignore`).
-* **`style:`** - Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc).
-* **`refactor:`** - A code change that neither fixes a bug nor adds a feature.
-* **`test:`** - Adding missing tests or correcting existing tests.
-* **`ci:`** - Changes to CI configuration files and scripts.
+- **`docs:`** - Documentation-only changes.
+- **`chore:`** - Changes to build process, auxiliary tools, or dependencies.
+- **`style:`** - Formatting, whitespace, or missing semi-colons.
+- **`refactor:`** - Code changes that neither fix a bug nor add a feature.
+- **`test:`** - Adding or updating test suites.
+- **`ci:`** - Changes to CI/CD workflows and configuration scripts.
 
-### Example Usage
+---
 
-To update the documentation without deploying a new version:
+### Example Commit Commands
+
+To update documentation without triggering a release:
+
 ```bash
 git commit -m "docs: update readme with new API instructions"
 ```
 
 To add a new feature that will be automatically deployed:
+
 ```bash
 git commit -m "feat: add user authentication"
 ```
