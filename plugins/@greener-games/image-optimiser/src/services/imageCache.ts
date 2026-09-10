@@ -2,9 +2,11 @@ import { useMediaOptimizerConfig } from './MediaOptimizerConfig';
 import { Logger } from './Logger';
 
 
-interface CacheMetadata {
+export interface CacheMetadata {
   timestamp: number;
   url: string;
+  size?: number;
+  width?: number;
 }
 
 export class ImageCacheService {
@@ -12,10 +14,10 @@ export class ImageCacheService {
   private static pendingRequests = new Map<string, Promise<string>>();
 
   /**
-   * Helper to format bytes to a readable size
+   * Helper to format bytes to a readable size string.
    */
-  private static formatSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
+  static formatSize(bytes: number = 0): string {
+    if (!bytes || bytes <= 0 || isNaN(bytes)) return '0 B';
     const k = 1024;
     const dm = 2;
     const sizes = ['B', 'KB', 'MB', 'GB'];
@@ -91,7 +93,9 @@ export class ImageCacheService {
       if (exactMatch) {
         if (!this.isStale(url)) {
           const blob = await exactMatch.blob();
-          Logger.info(`Exact match found: ${name}`);
+          const meta = this.getMetadata(url);
+          const size = meta?.size ?? (blob && typeof blob === 'object' && 'size' in blob ? (blob as Blob).size : 0);
+          Logger.info(`Exact match found: ${name} (Saved ${this.formatSize(size)} traffic)`);
           return this.createBlobUrl(url, blob);
         }
         // Stale: evict so it doesn't linger in the Cache API/localStorage forever
@@ -112,7 +116,20 @@ export class ImageCacheService {
           const cachedResponse = await cache.match(request);
           if (cachedResponse) {
             const blob = await cachedResponse.blob();
-            Logger.info(`Smart match found: ${name} (Using ${cachedWidth}px for ${requestedWidth}px request)`);
+            const meta = this.getMetadata(cachedUrl);
+            const cachedSize = meta?.size ?? (blob && typeof blob === 'object' && 'size' in blob ? (blob as Blob).size : 0);
+
+            if (cachedWidth > requestedWidth) {
+              const estimatedSaved = Math.round(cachedSize * Math.pow(requestedWidth / cachedWidth, 2));
+              Logger.info(
+                `Smart match found: ${name} (Reusing larger ${cachedWidth}px for ${requestedWidth}px request, saved ~${this.formatSize(estimatedSaved)} traffic)`
+              );
+            } else {
+              Logger.info(
+                `Smart match found: ${name} (Using cached ${cachedWidth}px sibling, saved ${this.formatSize(cachedSize)} traffic)`
+              );
+            }
+
             return this.createBlobUrl(url, blob);
           }
         }
@@ -128,11 +145,12 @@ export class ImageCacheService {
       if (response.ok) {
         const responseClone = response.clone();
         const blobForSize = await response.clone().blob();
+        const assetSize = blobForSize && typeof blobForSize === 'object' && 'size' in blobForSize ? (blobForSize as Blob).size : 0;
 
         await cache.put(url, responseClone);
-        this.updateMetadata(url);
+        this.updateMetadata(url, assetSize, requestedWidth);
 
-        Logger.info(`Cached new asset: ${name} (${this.formatSize(blobForSize.size)})`);
+        Logger.info(`Cached new asset: ${name} (${this.formatSize(assetSize)})`);
 
         const blob = await response.blob();
         return this.createBlobUrl(url, blob);
@@ -180,14 +198,30 @@ export class ImageCacheService {
     })));
   }
 
+  /**
+   * Retrieves parsed metadata for a cached asset URL.
+   */
+  private static getMetadata(url: string): CacheMetadata | null {
+    const raw = localStorage.getItem(`cache_meta_${url}`);
+    if (!raw) return null;
+
+    try {
+      return JSON.parse(raw) as CacheMetadata;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Checks whether a cached entry has passed its configured TTL.
+   */
   private static isStale(url: string): boolean {
-    const metadata = localStorage.getItem(`cache_meta_${url}`);
+    const metadata = this.getMetadata(url);
     if (!metadata) return true;
 
     try {
-      const { timestamp } = JSON.parse(metadata) as CacheMetadata;
       const now = Date.now();
-      const diffDays = (now - timestamp) / (1000 * 60 * 60 * 24);
+      const diffDays = (now - metadata.timestamp) / (1000 * 60 * 60 * 24);
       const config = useMediaOptimizerConfig();
       return diffDays > config.expirationDays;
     } catch {
@@ -195,10 +229,15 @@ export class ImageCacheService {
     }
   }
 
-  private static updateMetadata(url: string) {
+  /**
+   * Writes metadata for a cached asset URL to localStorage.
+   */
+  private static updateMetadata(url: string, size?: number, width?: number): void {
     const metadata: CacheMetadata = {
       timestamp: Date.now(),
-      url
+      url,
+      size,
+      width,
     };
     localStorage.setItem(`cache_meta_${url}`, JSON.stringify(metadata));
   }

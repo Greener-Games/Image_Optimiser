@@ -21,14 +21,18 @@ const createFakeCache = () => {
 };
 
 const fakeResponse = (blob: unknown, ok = true) => {
-  const resp = { ok, blob: () => Promise.resolve(blob), clone: () => resp };
+  const blobObj =
+    typeof blob === 'object' && blob !== null && 'size' in blob
+      ? blob
+      : { size: typeof blob === 'string' ? blob.length : 1024 };
+  const resp = { ok, blob: () => Promise.resolve(blobObj), clone: () => resp };
   return resp;
 };
 
-const setCacheMeta = (url: string, ageDays: number) => {
+const setCacheMeta = (url: string, ageDays: number, size = 1024, width = 0) => {
   localStorage.setItem(
     `cache_meta_${url}`,
-    JSON.stringify({ url, timestamp: Date.now() - ageDays * 24 * 60 * 60 * 1000 })
+    JSON.stringify({ url, timestamp: Date.now() - ageDays * 24 * 60 * 60 * 1000, size, width })
   );
 };
 
@@ -165,5 +169,88 @@ describe('ImageCacheService', () => {
 
     const result = await ImageCacheService.getImageUrl(url);
     expect(result).toBe(url);
+  });
+
+  it('saves size and width in metadata when caching a new asset', async () => {
+    setupMediaOptimizerConfig({ cacheIdentifiers: [sizedAssetIdentifier] });
+    const url = 'https://example.com/asset-800.jpg';
+    const fakeBlob = { size: 4096 };
+    const fetchMock = vi.fn(() => Promise.resolve(fakeResponse(fakeBlob)));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await ImageCacheService.getImageUrl(url);
+
+    const meta = JSON.parse(localStorage.getItem(`cache_meta_${url}`)!);
+    expect(meta.size).toBe(4096);
+    expect(meta.width).toBe(800);
+  });
+
+  it('logs saved traffic on exact match when logLevel is high', async () => {
+    const config = useMediaOptimizerConfig();
+    config.logLevel = 'high';
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    const url = 'https://example.com/exact.jpg';
+    fakeCache.store.set(url, { blob: { size: 2048 } });
+    setCacheMeta(url, 1, 2048, 600);
+
+    await ImageCacheService.getImageUrl(url);
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[ImageOptimiser]',
+      expect.stringContaining('Exact match found: exact.jpg (Saved 2 KB traffic)')
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  it('logs larger image reuse and estimated traffic savings for smart matches', async () => {
+    setupMediaOptimizerConfig({ cacheIdentifiers: [sizedAssetIdentifier] });
+    const config = useMediaOptimizerConfig();
+    config.logLevel = 'high';
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    const largeUrl = 'https://example.com/photo-1200.jpg';
+    const smallUrl = 'https://example.com/photo-600.jpg';
+    fakeCache.store.set(largeUrl, { blob: { size: 10000 } });
+    setCacheMeta(largeUrl, 1, 10000, 1200);
+
+    await ImageCacheService.getImageUrl(smallUrl);
+
+    // 10000 * (600/1200)^2 = 10000 * 0.25 = 2500 bytes (~2.44 KB)
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[ImageOptimiser]',
+      expect.stringContaining('Smart match found: photo-600.jpg (Reusing larger 1200px for 600px request, saved ~2.44 KB traffic)')
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  it('logs same-width sibling smart match and traffic saved', async () => {
+    setupMediaOptimizerConfig({ cacheIdentifiers: [sizedAssetIdentifier] });
+    const config = useMediaOptimizerConfig();
+    config.logLevel = 'high';
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    const cachedSiblingUrl = 'https://example.com/photo-600.jpg?v=1';
+    const requestedUrl = 'https://example.com/photo-600.jpg?v=2';
+    fakeCache.store.set(cachedSiblingUrl, { blob: { size: 4096 } });
+    setCacheMeta(cachedSiblingUrl, 1, 4096, 600);
+
+    await ImageCacheService.getImageUrl(requestedUrl);
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[ImageOptimiser]',
+      expect.stringContaining('Smart match found: photo-600.jpg (Using cached 600px sibling, saved 4 KB traffic)')
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  it('formats bytes correctly with formatSize', () => {
+    expect(ImageCacheService.formatSize(0)).toBe('0 B');
+    expect(ImageCacheService.formatSize(500)).toBe('500 B');
+    expect(ImageCacheService.formatSize(1024)).toBe('1 KB');
+    expect(ImageCacheService.formatSize(1048576)).toBe('1 MB');
   });
 });

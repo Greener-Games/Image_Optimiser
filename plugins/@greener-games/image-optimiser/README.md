@@ -34,7 +34,7 @@ app.use(createMediaOptimizerPlugin({
   enableOptimization: true,
   // Set the internal log level ('off' | 'low' | 'high')
   // 'low': Errors and warnings only
-  // 'high': All cache hits/misses and network fetches
+  // 'high': All cache hits/misses, network fetches, traffic savings, and larger asset reuses
   logLevel: 'off',
   // Note: The plugin ships with NO active optimizers or cache identifiers by default.
   // You MUST inject the ones you wish to use.
